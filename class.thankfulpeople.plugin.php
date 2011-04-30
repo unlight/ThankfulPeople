@@ -3,12 +3,12 @@
 $PluginInfo['ThankfulPeople'] = array(
 	'Name' => 'Thankful People',
 	//'Index' => 'ThankfulPeople', // used in Plugin::MakeMetaKey()
-	'Description' => 'Instead of having people post appreciation and thankyou notes they can simply click the thanks link and have their username appear under that post (MySchizoBuddy).',
-	'Version' => '2.0.3.Beta',
+	'Description' => 'Rremake of classic Vanilla One extension. Instead of having people post appreciation and thankyou notes they can simply click the thanks link and have their username appear under that post (MySchizoBuddy).',
+	'Version' => '2.0.4',
 	'Date' => '30 Apr 2011',
 	'Author' => 'Jerl Liandri',
 	'AuthorUrl' => 'http://www.liandri-mining-corporation.com',
-	'RequiredApplications' => array('Vanilla' => '>=2.1.0'),
+	'RequiredApplications' => array('Vanilla' => '>=2.0.17'),
 	'RequiredTheme' => False, 
 	'RequiredPlugins' => False,
 	//'RegisterPermissions' => array('Plugins.ThankfulPeople.Thank'),
@@ -85,13 +85,16 @@ class ThankfulPeoplePlugin extends Gdn_Plugin {
 		// TODO: REMOVE WAITING FOR VANILLA 2.1.0
 		$Sender->AddJsFile('plugins/ThankfulPeople/js/jquery.expander.js');
 		$Sender->AddJsFile('plugins/ThankfulPeople/js/thankfulpeople.functions.js');
+		
+		$Sender->AddDefinition('ExpandThankList', T('ExpandThankList'));
+		$Sender->AddDefinition('CollapseThankList', T('CollapseThankList'));
 	}
 	
 	public function DiscussionController_CommentOptions_Handler($Sender) {
 		$EventArguments =& $Sender->EventArguments;
 		$Type = $EventArguments['Type'];
 		$Object = $EventArguments['Object'];
-		$Session = Gdn::Session();
+		//$Session = Gdn::Session();
 		$SessionUserID = $this->Session->UserID;
 		if ($SessionUserID <= 0 || $Object->InsertUserID == $SessionUserID) return;
 		switch ($Type) {

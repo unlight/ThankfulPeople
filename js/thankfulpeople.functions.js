@@ -1,6 +1,11 @@
 $(document).ready(function(){
 	// http://plugins.learningjquery.com/expander/index.html#options
-	$('div.ThankedByBox').expander({slicePoint: 200, expandText: gdn.definition('ExpandText'), userCollapseText: gdn.definition('CollapseText')});
+	$('div.ThankedByBox').expander({
+		slicePoint: 200, 
+		expandText: gdn.definition('ExpandThankList'), 
+		userCollapse: false,
+		userCollapseText: gdn.definition('CollapseThankList')
+	});
 	$('div.ThankedByBox span.details > a:last').addClass('Last');
 	
 	$('span.Thank > a').live('click', function(){
