@@ -158,15 +158,17 @@ class ThanksLogModel extends Gdn_Model {
 			$this->EventArguments['ExcerptTextField'] =& $ExcerptTextField;
 			$this->FireEvent('RetreiveThankObject');
 			
+			$ObjectIDs = implode(',', array_map('intval', $ObjectIDs)); // TODO: REMOVE
+			
 			$Sql = $this->SQL
 				->Select("'$Type'", '', 'Type')
 				->Select($ObjectPrimaryKey, '', 'ObjectID')
 				->Select($ExcerptTextField, 'mid(%s, 1, 255)', 'ExcerptText') // TODO: Config how many first chars get
 				->Select('DateInserted')
 				->From($Table)
-				->WhereIn($ObjectPrimaryKey, $ObjectIDs)
+				->Where($ObjectPrimaryKey .' in ('.$ObjectIDs.')', Null, False, False)
 				->GetSelect();
-			$Sql = $this->SQL->ApplyParameters($Sql);
+			//$Sql = $this->SQL->ApplyParameters($Sql); // TODO: WAITING FOR APPLYING COMMITS
 			$this->SQL->Reset();
 			$SqlCollection[] = $Sql;
 		}
