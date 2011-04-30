@@ -4,14 +4,14 @@ $PluginInfo['ThankfulPeople'] = array(
 	'Name' => 'Thankful People',
 	//'Index' => 'ThankfulPeople', // used in Plugin::MakeMetaKey()
 	'Description' => 'Instead of having people post appreciation and thankyou notes they can simply click the thanks link and have their username appear under that post (MySchizoBuddy).',
-	'Version' => '2.0.2',
-	'Date' => '29 Apr 2011',
+	'Version' => '2.0.3.Beta',
+	'Date' => '30 Apr 2011',
 	'Author' => 'Jerl Liandri',
 	'AuthorUrl' => 'http://www.liandri-mining-corporation.com',
 	'RequiredApplications' => array('Vanilla' => '>=2.1.0'),
 	'RequiredTheme' => False, 
 	'RequiredPlugins' => False,
-	'RegisterPermissions' => array('Plugins.ThankfulPeople.Thank'),
+	//'RegisterPermissions' => array('Plugins.ThankfulPeople.Thank'),
 	//'SettingsPermission' => False,
 	'License' => 'X.Net License'
 );
@@ -23,11 +23,10 @@ class ThankfulPeoplePlugin extends Gdn_Plugin {
 	protected $ThankForComment = array(); // UserIDs array
 	protected $CommentGroup = array();
 	protected $DiscussionData = array();
-	protected $Session;
+	private $Session;
 
 	public function __construct() {
 		$this->Session = Gdn::Session();
-		//$this->Structure(); d('Structure'); // TEST
 	}
 	
 	// TODO: _AttachMessageThankCount
@@ -43,27 +42,25 @@ class ThankfulPeoplePlugin extends Gdn_Plugin {
 	
 	public function PluginController_ThankFor_Create($Sender) {
 		$Session = $this->Session;
-		$Sender->Permission('Plugins.ThankfulPeople.Thank'); // TODO: PERMISSION THANK FOR CATEGORY
+		//$Sender->Permission('Plugins.ThankfulPeople.Thank'); // TODO: PERMISSION THANK FOR CATEGORY
+		$ThanksLogModel = new ThanksLogModel();
 		$Type = GetValue(0, $Sender->RequestArgs);
 		$ObjectID = GetValue(1, $Sender->RequestArgs);
-		$Table = ucfirst($Type);
-		$Field = $Table.'ID';
-		switch ($Field) {
-			case 'CommentID':
-			case 'DiscussionID': break;
-			default: throw new Exception('Doh. Unknown...');
-		}
-		// TODO: Check for duplicate
-		// TODO: FireEvent here
-		$UserID = ThanksLogModel::GetObjectInserUserID($Table, $ObjectID, $Field);
-		if ($UserID === Null) throw new Exception('Object has no owner.');
-		ThanksLogModel::PutThank($Table, $ObjectID, $UserID);
+		$Field = $ThanksLogModel->GetPrimaryKeyField($Type);
+		$UserID = $ThanksLogModel->GetObjectInserUserID($Type, $ObjectID);
+		if ($UserID == False) throw new Exception('Object has no owner.');
+		// Make sure that user is not trying to say thanks twice.
+		$Count = $ThanksLogModel->GetCount(array($Field => $ObjectID, 'InsertUserID' => $Session->User->UserID));
+		if ($Count < 1) $ThanksLogModel->PutThank($Type, $ObjectID, $UserID);
+		
 		if ($Sender->DeliveryType() == DELIVERY_TYPE_ALL) {
 			$Target = GetIncomingValue('Target', 'discussions');
 			Redirect($Target);
 		}
-		// TODO: JSON, DeliveryType BOOL
 		
+		$ThankfulPeopleDataSet = $ThanksLogModel->GetThankfulPeople($Type, $ObjectID);
+		$Sender->SetData('NewThankedByBox', self::ThankedByBox($ThankfulPeopleDataSet->Result(), False));
+		$Sender->Render();
 	}
 	
 	public function DiscussionController_Render_Before($Sender) {
@@ -95,20 +92,24 @@ class ThankfulPeoplePlugin extends Gdn_Plugin {
 		$Type = $EventArguments['Type'];
 		$Object = $EventArguments['Object'];
 		$Session = Gdn::Session();
-		if (!$Session->IsValid() || $Object->InsertUserID == $Session->UserID) return;
-		if ($Type == 'Discussion') {
-			$DiscussionID = $ObjectID = $Object->DiscussionID;
-			if (array_key_exists($Session->UserID, $this->DiscussionData)) return;
-		}
-		elseif ($Type == 'Comment') {
-			$CommentID = $ObjectID = $Object->CommentID;
-			if (array_key_exists($CommentID, $this->ThankForComment) && in_array($Session->UserID, $this->ThankForComment[$CommentID])) return;
+		$SessionUserID = $this->Session->UserID;
+		if ($SessionUserID <= 0 || $Object->InsertUserID == $SessionUserID) return;
+		switch ($Type) {
+			case 'Discussion': {
+				$DiscussionID = $ObjectID = $Object->DiscussionID;
+				if (array_key_exists($SessionUserID, $this->DiscussionData)) return;
+				break;
+			}
+			case 'Comment': {
+				$CommentID = $ObjectID = $Object->CommentID;
+				if (array_key_exists($CommentID, $this->ThankForComment) && in_array($SessionUserID, $this->ThankForComment[$CommentID])) return;
+				break;
+			}
 		}
 		
 		static $LocalizedThankButtonText;
 		if ($LocalizedThankButtonText === Null) $LocalizedThankButtonText = T('ThankCommentOption', T('Thanks'));
 		
-		$PropertyName = $Type.'ID';
 		$ThankUrl = 'plugin/thankfor/'.strtolower($Type).'/'.$ObjectID.'?Target='.$Sender->SelfUrl;
 		
 		$Option = '<span class="Thank">'.Anchor($LocalizedThankButtonText, $ThankUrl).'</span>';
@@ -117,33 +118,33 @@ class ThankfulPeoplePlugin extends Gdn_Plugin {
 	
 	public function DiscussionController_AfterCommentBody_Handler($Sender) {
 		$Object = $Sender->EventArguments['Object'];
+		if ($Object->ThankCount <= 0) return;
 		$Type = $Sender->EventArguments['Type'];
-		$ThankedByList = '';
+		$ThankedByBox = '';
 		switch ($Type) {
 			case 'Comment': {
-				if ($Object->ThankCount <= 0) return;
 				$ThankedByCollection = GetValue($Object->CommentID, $this->CommentGroup);
-				$MessageThankCount = count($ThankedByCollection);
-				if ($ThankedByCollection) $ThankedByList = self::ThankedByList($ThankedByCollection);
-			} break;
+				if ($ThankedByCollection) $ThankedByBox = self::ThankedByBox($ThankedByCollection);
+				break;
+			}
 			case 'Discussion': {
-				if ($Object->ThankCount <= 0) return;
-				$MessageThankCount = count($this->DiscussionData);
-				$ThankedByList = self::ThankedByList($this->DiscussionData);
-			} break;
+				$ThankedByBox = self::ThankedByBox($this->DiscussionData);
+				break;
+			}
 			default: throw new Exception('What...');
 		}
-		if ($ThankedByList != '') {
-			//echo '<div class="ThankedByBox"><span class="ThankedBy">'.T('Thanked by').'</span>'.$ThankedByList.'</div>';
-			$LocalizedPluralText = Plural($MessageThankCount, 'Thanked by (%1$d)', 'Thanked by (%1$d)');
-			//echo '<div class="ThankedByBox"><span class="ThankedBy">'.sprintf(T('Thanked by (%1$d)'), $MessageThankCount).'</span>'.$ThankedByList.'</div>';
-			echo '<div class="ThankedByBox"><span class="ThankedBy">'.$LocalizedPluralText.'</span>'.$ThankedByList.'</div>';
-		}
+		if ($ThankedByBox != '') echo $ThankedByBox;
 	}
 	
-	public static function ThankedByList($ThankedByCollection) {
-		$ThankedByList = implode(' ', array_map('UserAnchor', $ThankedByCollection));
-		return $ThankedByList;
+	public static function ThankedByBox($Collection, $Wrap = True) {
+		$List = implode(' ', array_map('UserAnchor', $Collection));
+		$ThankCount = count($Collection);
+		$ThankCountHtml = Wrap($ThankCount);
+		$LocalizedPluralText = Plural($ThankCountHtml, 'Thanked by %1$s', 'Thanked by %1$s');
+		$Html = '<span class="ThankedBy">'
+			.$LocalizedPluralText.'</span>'.$List;
+		if ($Wrap) $Html = Wrap($Html, 'div', array('class' => 'ThankedByBox'));
+		return $Html;
 	}
 	
 	public function UserInfoModule_OnBasicInfo_Handler($Sender) {
@@ -176,8 +177,8 @@ class ThankfulPeoplePlugin extends Gdn_Plugin {
 		$Sender->SetTabView($Thanked, $View);
 		$ViewingUserID = GetValue(0, $Sender->RequestArgs);
 		$ThanksLogModel = new ThanksLogModel();
-		list($Sender->ThankData, $Sender->ThankObjects) = $ThanksLogModel->GetReceivedThanks($ViewingUserID);
-
+		// TODO: PAGINATION
+		list($Sender->ThankData, $Sender->ThankObjects) = $ThanksLogModel->GetReceivedThanks(array('t.UserID' => $ViewingUserID), 0, 50);
 		$Sender->Render();
 	}
 	
@@ -214,5 +215,6 @@ class ThankfulPeoplePlugin extends Gdn_Plugin {
 	}
 		
 	public function Setup() {
+		$this->Structure();
 	}
 }

@@ -26,3 +26,10 @@ span.re-collapse a:after{
 	content: "" !important;
 }
 
+div.ThankedByBox > span.ThankedBy > span:before {
+	content: "(";
+}
+
+div.ThankedByBox > span.ThankedBy > span:after {
+	content: ")";
+}

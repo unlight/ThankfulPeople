@@ -1,12 +1,12 @@
 <?php if (!defined('APPLICATION')) exit();
 
-/*			<a class="Title" href="/discussion/2168">Sed egestas</a>			
-			<div class="Excerpt"><a href="/discussion/2168">Sed egestas</a></div>
-			
-		<div class="Meta">
-			<span><?php echo Gdn_Format::Date($Object->DateInserted);?></span>
-			<!--<span><a href="/discussion/2168">?</a></span> -->
-		</div>
+/*	<a class="Title" href="/discussion/2168">Sed egestas</a>			
+	<div class="Excerpt"><a href="/discussion/2168">Sed egestas</a></div>
+		
+	<div class="Meta">
+		<span><?php echo Gdn_Format::Date($Object->DateInserted);?></span>
+		<!--<span><a href="/discussion/2168">?</a></span> -->
+	</div>
 */
 
 ?>
@@ -16,18 +16,14 @@
 	$Type = $Object->Type; // table
 	$ObjectID = $Object->ObjectID;
 	$ThankCollection = GetValueR("$Type.$ObjectID", $this->ThankData);
-	$ThankCount = count($ThankCollection);
-	$ThankedByList = ThankfulPeoplePlugin::ThankedByList($ThankCollection);
-	//d($Object, $ThankCollection, $Type);
 	$ExcerptText = SliceString(Gdn_Format::Text($Object->ExcerptText), 120);
 	if ($Object->Url) $ExcerptText = Anchor($ExcerptText, $Object->Url);
-	$LocalizedPluralText = Plural($ThankCount, 'Thanked by (%1$d)', 'Thanked by (%1$d)');
 	// TODO: thank DateInserted
 ?>
 <li class="Item">
 	<div class="ItemContent">
 		<div class="Excerpt"><?php echo $ExcerptText;?></div>
-	<?php echo '<div class="ThankedByBox"><span class="ThankedBy">'.$LocalizedPluralText.'</span>'.$ThankedByList.'</div>'; ?>
+	<?php echo ThankfulPeoplePlugin::ThankedByBox($ThankCollection); ?>
 	</div>
 </li>
 	

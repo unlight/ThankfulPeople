@@ -4,5 +4,5 @@
 $Definition['UserInfoModule.Thanked'] = 'Thanked';
 $Definition['Profile.Tab.Thanked'] = 'Thanked';
 $Definition['Thanked by'] = 'Thanked by';
-$Definition['Thanked by (%1$d)'] = 'Thanked by (%1$d)';
-
+$Definition['Thanked by %1$s'] = 'Thanked by %1$s';
+$Definition['ThankCommentOption'] = 'Thanks';
