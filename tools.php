@@ -12,9 +12,9 @@ if ($Argument == 'structure') {
 }
 elseif ($Argument == 'calc') {
 	ThanksLogModel::RecalculateUserReceivedThankCount();
-	ThanksLogModel::RecalculateCommentThankCount();
-	ThanksLogModel::RecalculateDiscussionThankCount();
-} elseif ($Argument == 'com') {
+	//ThanksLogModel::RecalculateCommentThankCount();
+	//ThanksLogModel::RecalculateDiscussionThankCount();
+} elseif ($Argument == 'garbage') {
 	$Limit = Console::Argument('limit');
 	if (!$Limit) $Limit = 10;
 	$CommentDataSet = $SQL
@@ -23,13 +23,24 @@ elseif ($Argument == 'calc') {
 		->OrderBy('DateInserted', 'desc')
 		->Limit($Limit)
 		->Get();
-	foreach ($CommentDataSet as $Comment) {
-		$Fields = array('CommentID' => $Comment->CommentID);
-		$Fields['UserID'] = $Comment->InsertUserID;
-		$Fields['InsertUserID'] = mt_rand(1, $MaxUserID);
-		$Fields['DateInserted'] = Gdn_Format::ToDateTime();
-		$SQL->Insert('ThanksLog', $Fields);
-		Console::Message('Garbaged thank comment: %s', $Comment->CommentID);
+	$Loop = Console::Argument('loop');
+	if (!is_numeric($Loop) || $Loop <= 0) $Loop = 1;
+	for ($i = 0; $i < $Loop; $i++) {
+		foreach ($CommentDataSet as $Comment) {
+			$InsertUserID = mt_rand(1, $MaxUserID);
+			$Fields = array('CommentID' => $Comment->CommentID);
+			$Fields['UserID'] = $Comment->InsertUserID;
+			$Fields['InsertUserID'] = $InsertUserID;
+			$Fields['DateInserted'] = Gdn_Format::ToDateTime();
+			
+			if ($InsertUserID % 5 == 0) {
+				unset($Fields['CommentID']);
+				$Fields['DiscussionID'] = $Comment->DiscussionID;
+			}
+			
+			$SQL->Insert('ThanksLog', $Fields);
+			Console::Message('Garbaged thank comment: %s', GetValue('CommentID', $Fields));
+		}
 	}
 }
 

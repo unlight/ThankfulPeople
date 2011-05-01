@@ -4,11 +4,11 @@ $PluginInfo['ThankfulPeople'] = array(
 	'Name' => 'Thankful People',
 	//'Index' => 'ThankfulPeople', // used in Plugin::MakeMetaKey()
 	'Description' => 'Rremake of classic Vanilla One extension. Instead of having people post appreciation and thankyou notes they can simply click the thanks link and have their username appear under that post (MySchizoBuddy).',
-	'Version' => '2.0.4',
+	'Version' => '2.0.5',
 	'Date' => '30 Apr 2011',
 	'Author' => 'Jerl Liandri',
 	'AuthorUrl' => 'http://www.liandri-mining-corporation.com',
-	'RequiredApplications' => array('Vanilla' => '>=2.0.17'),
+	'RequiredApplications' => array('Vanilla' => '>=2.0.12'),
 	'RequiredTheme' => False, 
 	'RequiredPlugins' => False,
 	//'RegisterPermissions' => array('Plugins.ThankfulPeople.Thank'),
@@ -121,9 +121,8 @@ class ThankfulPeoplePlugin extends Gdn_Plugin {
 	
 	public function DiscussionController_AfterCommentBody_Handler($Sender) {
 		$Object = $Sender->EventArguments['Object'];
-		if ($Object->ThankCount <= 0) return;
 		$Type = $Sender->EventArguments['Type'];
-		$ThankedByBox = '';
+		$ThankedByBox = False;
 		switch ($Type) {
 			case 'Comment': {
 				$ThankedByCollection = GetValue($Object->CommentID, $this->CommentGroup);
@@ -136,7 +135,7 @@ class ThankfulPeoplePlugin extends Gdn_Plugin {
 			}
 			default: throw new Exception('What...');
 		}
-		if ($ThankedByBox != '') echo $ThankedByBox;
+		if ($ThankedByBox !== False) echo $ThankedByBox;
 	}
 	
 	public static function ThankedByBox($Collection, $Wrap = True) {
@@ -144,8 +143,7 @@ class ThankfulPeoplePlugin extends Gdn_Plugin {
 		$ThankCount = count($Collection);
 		$ThankCountHtml = Wrap($ThankCount);
 		$LocalizedPluralText = Plural($ThankCountHtml, 'Thanked by %1$s', 'Thanked by %1$s');
-		$Html = '<span class="ThankedBy">'
-			.$LocalizedPluralText.'</span>'.$List;
+		$Html = '<span class="ThankedBy">'.$LocalizedPluralText.'</span>'.$List;
 		if ($Wrap) $Html = Wrap($Html, 'div', array('class' => 'ThankedByBox'));
 		return $Html;
 	}
@@ -172,13 +170,12 @@ class ThankfulPeoplePlugin extends Gdn_Plugin {
 		$UserReference = ArrayValue(0, $Sender->RequestArgs, '');
 		$Username = ArrayValue(1, $Sender->RequestArgs, '');
 		$Sender->GetUserInfo($UserReference, $Username);
-		$View = $this->GetView('receivedthanks.php');
+		$ViewingUserID = $Sender->User->UserID;
 		
-		$ReceivedThankCount = $ReceivedThankCount = $Sender->User->ReceivedThankCount;
+		$ReceivedThankCount = $Sender->User->ReceivedThankCount;
 		$Thanked = T('Profile.Tab.Thanked', T('Thanked')).'<span>'.$ReceivedThankCount.'</span>';
-		
+		$View = $this->GetView('receivedthanks.php');
 		$Sender->SetTabView($Thanked, $View);
-		$ViewingUserID = GetValue(0, $Sender->RequestArgs);
 		$ThanksLogModel = new ThanksLogModel();
 		// TODO: PAGINATION
 		list($Sender->ThankData, $Sender->ThankObjects) = $ThanksLogModel->GetReceivedThanks(array('t.UserID' => $ViewingUserID), 0, 50);
@@ -186,7 +183,7 @@ class ThankfulPeoplePlugin extends Gdn_Plugin {
 	}
 	
 	public function Structure($Drop = False) {
-		Gdn::Structure()
+/*		Gdn::Structure()
 			->Table('Comment')
 			->Column('ThankCount', 'usmallint', 0)
 			->Set();
@@ -194,7 +191,7 @@ class ThankfulPeoplePlugin extends Gdn_Plugin {
 		Gdn::Structure()
 			->Table('Discussion')
 			->Column('ThankCount', 'usmallint', 0)
-			->Set();
+			->Set();*/
 		
 		Gdn::Structure()
 			->Table('User')
@@ -205,16 +202,16 @@ class ThankfulPeoplePlugin extends Gdn_Plugin {
 		Gdn::Structure()
 			->Table('ThanksLog')
 			->Column('UserID', 'umediumint', False, 'key')
-			->Column('CommentID', 'umediumint', Null)
-			->Column('DiscussionID', 'umediumint', Null)
+			->Column('CommentID', 'umediumint', 0)
+			->Column('DiscussionID', 'umediumint', 0)
 			->Column('DateInserted', 'datetime')
 			->Column('InsertUserID', 'umediumint', False, 'key')
 			->Engine('MyISAM')
 			->Set(False, $Drop);
 			
 		ThanksLogModel::RecalculateUserReceivedThankCount();
-		ThanksLogModel::RecalculateCommentThankCount();
-		ThanksLogModel::RecalculateDiscussionThankCount();
+		//ThanksLogModel::RecalculateCommentThankCount();
+		//ThanksLogModel::RecalculateDiscussionThankCount();
 	}
 		
 	public function Setup() {

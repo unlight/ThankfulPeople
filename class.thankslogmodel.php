@@ -46,8 +46,8 @@ class ThanksLogModel extends Gdn_Model {
 			->Set('UserID', $UserID)
 			->Insert('ThanksLog', array()); // BUG: https://github.com/vanillaforums/Garden/issues/566
 		self::UpdateUserReceivedThankCount($UserID);
-		$Function = 'Recalculate'.$Type.'ThankCount';
-		call_user_func(array('self', $Function), $ObjectID);
+		//$Function = 'Recalculate'.$Type.'ThankCount';
+		//call_user_func(array('self', $Function), $ObjectID);
 	}
 	
 	public static function UpdateUserReceivedThankCount($UserID) {
@@ -72,7 +72,7 @@ class ThanksLogModel extends Gdn_Model {
 			->Put();
 	}
 	
-	public static function RecalculateDiscussionThankCount($DiscussionID = False) {
+/*	public static function RecalculateDiscussionThankCount($DiscussionID = False) {
 		$SQL = Gdn::SQL();
 		$Px = $SQL->Database->DatabasePrefix;
 		$SqlCommentCount = $SQL
@@ -102,7 +102,7 @@ class ThanksLogModel extends Gdn_Model {
 			->Update('Comment c')
 			->Set('c.ThankCount', "($SqlCommentCount)", False, False)
 			->Put();
-	}
+	}*/
 	
 	public function GetDiscussionComments($DiscussionID, $CommentData, $Where = Null) {
 		$Where['WithDiscussionID'] = $DiscussionID;
