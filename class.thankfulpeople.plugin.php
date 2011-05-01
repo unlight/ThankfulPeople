@@ -4,7 +4,7 @@ $PluginInfo['ThankfulPeople'] = array(
 	'Name' => 'Thankful People',
 	//'Index' => 'ThankfulPeople', // used in Plugin::MakeMetaKey()
 	'Description' => 'Rremake of classic Vanilla One extension. Instead of having people post appreciation and thankyou notes they can simply click the thanks link and have their username appear under that post (MySchizoBuddy).',
-	'Version' => '2.0.5',
+	'Version' => '2.0.6',
 	'Date' => '30 Apr 2011',
 	'Author' => 'Jerl Liandri',
 	'AuthorUrl' => 'http://www.liandri-mining-corporation.com',
@@ -42,6 +42,7 @@ class ThankfulPeoplePlugin extends Gdn_Plugin {
 	
 	public function PluginController_ThankFor_Create($Sender) {
 		$Session = $this->Session;
+		if (!$Session->IsValid()) return;
 		//$Sender->Permission('Plugins.ThankfulPeople.Thank'); // TODO: PERMISSION THANK FOR CATEGORY
 		$ThanksLogModel = new ThanksLogModel();
 		$Type = GetValue(0, $Sender->RequestArgs);

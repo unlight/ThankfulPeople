@@ -44,3 +44,9 @@ elseif ($Argument == 'calc') {
 	}
 }
 
+/* LUM_ThankfulPeople
+	CommentID
+	UserID
+*/
+	
+
