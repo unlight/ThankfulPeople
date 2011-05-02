@@ -4,8 +4,8 @@ $PluginInfo['ThankfulPeople'] = array(
 	'Name' => 'Thankful People',
 	//'Index' => 'ThankfulPeople', // used in Plugin::MakeMetaKey()
 	'Description' => 'Rremake of classic Vanilla One extension. Instead of having people post appreciation and thankyou notes they can simply click the thanks link and have their username appear under that post (MySchizoBuddy).',
-	'Version' => '2.0.6',
-	'Date' => '30 Apr 2011',
+	'Version' => '2.0.7',
+	'Date' => '2 May 2011',
 	'Author' => 'Jerl Liandri',
 	'AuthorUrl' => 'http://www.liandri-mining-corporation.com',
 	'RequiredApplications' => array('Vanilla' => '>=2.0.12'),
@@ -126,12 +126,12 @@ class ThankfulPeoplePlugin extends Gdn_Plugin {
 		$ThankedByBox = False;
 		switch ($Type) {
 			case 'Comment': {
-				$ThankedByCollection = GetValue($Object->CommentID, $this->CommentGroup);
+				$ThankedByCollection =& $this->CommentGroup[$Object->CommentID];
 				if ($ThankedByCollection) $ThankedByBox = self::ThankedByBox($ThankedByCollection);
 				break;
 			}
 			case 'Discussion': {
-				$ThankedByBox = self::ThankedByBox($this->DiscussionData);
+				if (count($this->DiscussionData) > 0) $ThankedByBox = self::ThankedByBox($this->DiscussionData);
 				break;
 			}
 			default: throw new Exception('What...');
