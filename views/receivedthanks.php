@@ -13,9 +13,7 @@
 
 <ul class="DataList SearchResults ThankObjects">
 <?php foreach($this->ThankObjects as $Object) {
-	$Type = $Object->Type; // table
-	$ObjectID = $Object->ObjectID;
-	$ThankCollection = GetValueR("$Type.$ObjectID", $this->ThankData);
+	$ThankCollection = GetValue($Object->ObjectID, GetValue($Object->Type, $this->ThankData));
 	$ExcerptText = SliceString(Gdn_Format::Text($Object->ExcerptText), 200);
 	if ($Object->Url) $ExcerptText = Anchor($ExcerptText, $Object->Url);
 	// TODO: thank DateInserted

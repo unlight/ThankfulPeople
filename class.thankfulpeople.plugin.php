@@ -3,9 +3,9 @@
 $PluginInfo['ThankfulPeople'] = array(
 	'Name' => 'Thankful People',
 	//'Index' => 'ThankfulPeople', // used in Plugin::MakeMetaKey()
-	'Description' => 'Rremake of classic Vanilla One extension. Instead of having people post appreciation and thankyou notes they can simply click the thanks link and have their username appear under that post (MySchizoBuddy).',
-	'Version' => '2.0.7',
-	'Date' => '2 May 2011',
+	'Description' => 'Remake of classic Vanilla One extension. Instead of having people post appreciation and thankyou notes they can simply click the thanks link and have their username appear under that post (MySchizoBuddy).',
+	'Version' => '2.0.9',
+	'Date' => '3 May 2011',
 	'Author' => 'Jerl Liandri',
 	'AuthorUrl' => 'http://www.liandri-mining-corporation.com',
 	'RequiredApplications' => array('Vanilla' => '>=2.0.12'),
@@ -15,6 +15,8 @@ $PluginInfo['ThankfulPeople'] = array(
 	//'SettingsPermission' => False,
 	'License' => 'X.Net License'
 );
+
+// TODO: CLEANUP THANKSLOG TABLE
 
 // TODO: PERMISSION THANK FOR CATEGORY
 
@@ -65,6 +67,7 @@ class ThankfulPeoplePlugin extends Gdn_Plugin {
 	}
 	
 	public function DiscussionController_Render_Before($Sender) {
+		if (!($Sender->DeliveryType() == DELIVERY_TYPE_ALL && $Sender->SyndicationMethod == SYNDICATION_NONE)) return;
 		$ThanksLogModel = new ThanksLogModel();
 		$DiscussionID = $Sender->DiscussionID;
 		// TODO: Permission view thanked
@@ -83,7 +86,7 @@ class ThankfulPeoplePlugin extends Gdn_Plugin {
 		
 		$Sender->AddCssFile('plugins/ThankfulPeople/design/thankfulpeople.css');
 		//$Sender->AddJsFile('jquery.expander.js');
-		// TODO: REMOVE WAITING FOR VANILLA 2.1.0
+		// TODO: REMOVE, WAITING FOR VANILLA 2.1.0
 		$Sender->AddJsFile('plugins/ThankfulPeople/js/jquery.expander.js');
 		$Sender->AddJsFile('plugins/ThankfulPeople/js/thankfulpeople.functions.js');
 		
