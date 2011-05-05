@@ -11,7 +11,45 @@ class ThanksLogModel extends Gdn_Model {
 	
 	public function __construct() {
 		parent::__construct('ThanksLog');
-		// TODO: FireEvent here, if need add fields to $TableFields
+		$this->FireEvent('AfterConstruct');
+	}
+	
+	public function GetCount($Where = False) {
+		$Where['bCountQuery'] = True;
+		$Result = $this->Get($Where);
+		return $Result;
+	}
+	
+	public function Get($Where = False, $Offset = False, $Limit = False) {
+		
+		$bCountQuery = GetValue('bCountQuery', $Where, False, True);
+		$this->EventArguments['WhereOptions'] = $Where;
+		$this->EventArguments['bCountQuery'] = $bCountQuery;
+		
+		if ($bCountQuery) {
+			$this->SQL->Select('*', 'count', 'RowCount');
+			$Offset = $Limit = False;
+		}
+		if ($CommentData = GetValue('Comments', $Where, False, True)) {
+			if ($CommentData instanceof Gdn_DataSet) $CommentData = ConsolidateArrayValuesByKey($CommentData->Result(), 'CommentID');
+			if (!is_array($CommentData)) trigger_error('Unexpected type: '.gettype($CommentData), E_USER_ERROR);
+			$this->SQL
+				->WhereIn('t.CommentID', $CommentData);
+		}
+		if ($WithDiscussionID = GetValue('WithDiscussionID', $Where, False, True)) {
+			$this->SQL->OrWhere('t.DiscussionID', $WithDiscussionID);
+		}
+		
+		$this->FireEvent('BeforeGet');
+		
+		// Final where and return dataset or row count
+		if (is_array($Where)) $this->SQL->Where($Where);
+		$Result = $this->SQL
+			->From('ThanksLog t')
+			->Limit($Limit, $Offset)
+			->Get();
+		if ($bCountQuery) $Result = $Result->FirstRow()->RowCount;
+		return $Result;
 	}
 	
 	public static function GetPrimaryKeyField($Name) { // Type, Table name
@@ -71,38 +109,6 @@ class ThanksLogModel extends Gdn_Model {
 			->Set('u.ReceivedThankCount', "($SqlCount)", False, False)
 			->Put();
 	}
-	
-/*	public static function RecalculateDiscussionThankCount($DiscussionID = False) {
-		$SQL = Gdn::SQL();
-		$Px = $SQL->Database->DatabasePrefix;
-		$SqlCommentCount = $SQL
-			->Select('*', 'count', 'Count')
-			->From('ThanksLog t')
-			->Where('t.DiscussionID', 'd.DiscussionID', False, False)
-			->GetSelect();
-		$SQL->Reset();
-		if ($DiscussionID !== False) $SQL->Where('d.DiscussionID', $DiscussionID);
-		$SQL
-			->Update('Discussion d')
-			->Set('d.ThankCount', "($SqlCommentCount)", False, False)
-			->Put();
-	}
-	
-	public static function RecalculateCommentThankCount($CommentID = False) {
-		$SQL = Gdn::SQL();
-		$Px = $SQL->Database->DatabasePrefix;
-		$SqlCommentCount = $SQL
-			->Select('*', 'count', 'Count')
-			->From('ThanksLog t')
-			->Where('t.CommentID', 'c.CommentID', False, False)
-			->GetSelect();
-		$SQL->Reset();
-		if ($CommentID !== False) $SQL->Where('c.CommentID', $CommentID);
-		$SQL
-			->Update('Comment c')
-			->Set('c.ThankCount', "($SqlCommentCount)", False, False)
-			->Put();
-	}*/
 	
 	public function GetDiscussionComments($DiscussionID, $CommentData, $Where = Null) {
 		$Where['WithDiscussionID'] = $DiscussionID;
@@ -182,43 +188,49 @@ class ThanksLogModel extends Gdn_Model {
 		return $Result;
 	}
 	
-	public function GetCount($Where = False) {
-		$Where['bCountQuery'] = True;
-		$Result = $this->Get($Where);
-		return $Result;
+	public static function CleanUp() {
+		$SQL = Gdn::SQL();
+		$Px = $SQL->Database->DatabasePrefix;
+		$SQL->Query("delete t.* from {$Px}ThanksLog t 
+			left join {$Px}Comment c on c.CommentID = t.CommentID 
+			where c.commentID is null and t.commentID > 0");
+		$SQL->Query("delete t.* from {$Px}ThanksLog t 
+			left join {$Px}Discussion d on d.DiscussionID = t.DiscussionID 
+			where d.DiscussionID is null and t.DiscussionID > 0");
 	}
 	
-	public function Get($Where = False, $Offset = False, $Limit = False) {
-		
-		$bCountQuery = GetValue('bCountQuery', $Where, False, True);
-		$this->EventArguments['WhereOptions'] = $Where;
-		$this->EventArguments['bCountQuery'] = $bCountQuery;
-		
-		if ($bCountQuery) {
-			$this->SQL->Select('*', 'count', 'RowCount');
-			$Offset = $Limit = False;
-		}
-		if ($CommentData = GetValue('Comments', $Where, False, True)) {
-			if ($CommentData instanceof Gdn_DataSet) $CommentData = ConsolidateArrayValuesByKey($CommentData->Result(), 'CommentID');
-			if (!is_array($CommentData)) trigger_error('Unexpected type: '.gettype($CommentData), E_USER_ERROR);
-			$this->SQL
-				->WhereIn('t.CommentID', $CommentData);
-		}
-		if ($WithDiscussionID = GetValue('WithDiscussionID', $Where, False, True)) {
-			$this->SQL->OrWhere('t.DiscussionID', $WithDiscussionID);
-		}
-		
-		$this->FireEvent('BeforeGet');
-		
-		// Final where and return dataset or row count
-		if (is_array($Where)) $this->SQL->Where($Where);
-		$Result = $this->SQL
+	
+/*	public static function RecalculateDiscussionThankCount($DiscussionID = False) {
+		$SQL = Gdn::SQL();
+		$Px = $SQL->Database->DatabasePrefix;
+		$SqlCommentCount = $SQL
+			->Select('*', 'count', 'Count')
 			->From('ThanksLog t')
-			->Limit($Limit, $Offset)
-			->Get();
-		if ($bCountQuery) $Result = $Result->FirstRow()->RowCount;
-		return $Result;
+			->Where('t.DiscussionID', 'd.DiscussionID', False, False)
+			->GetSelect();
+		$SQL->Reset();
+		if ($DiscussionID !== False) $SQL->Where('d.DiscussionID', $DiscussionID);
+		$SQL
+			->Update('Discussion d')
+			->Set('d.ThankCount', "($SqlCommentCount)", False, False)
+			->Put();
 	}
-
+	
+	public static function RecalculateCommentThankCount($CommentID = False) {
+		$SQL = Gdn::SQL();
+		$Px = $SQL->Database->DatabasePrefix;
+		$SqlCommentCount = $SQL
+			->Select('*', 'count', 'Count')
+			->From('ThanksLog t')
+			->Where('t.CommentID', 'c.CommentID', False, False)
+			->GetSelect();
+		$SQL->Reset();
+		if ($CommentID !== False) $SQL->Where('c.CommentID', $CommentID);
+		$SQL
+			->Update('Comment c')
+			->Set('c.ThankCount', "($SqlCommentCount)", False, False)
+			->Put();
+	}*/
+	
 	
 }

@@ -4,7 +4,7 @@ $PluginInfo['ThankfulPeople'] = array(
 	'Name' => 'Thankful People',
 	//'Index' => 'ThankfulPeople', // used in Plugin::MakeMetaKey()
 	'Description' => 'Remake of classic Vanilla One extension. Instead of having people post appreciation and thankyou notes they can simply click the thanks link and have their username appear under that post (MySchizoBuddy).',
-	'Version' => '2.0.9',
+	'Version' => '2.0.10',
 	'Date' => '3 May 2011',
 	'Author' => 'Jerl Liandri',
 	'AuthorUrl' => 'http://www.liandri-mining-corporation.com',
@@ -185,21 +185,13 @@ class ThankfulPeoplePlugin extends Gdn_Plugin {
 	}
 	
 	public function Tick_Every_720_Hours_Handler($Sender) {
-		// TODO: MOVE TO MODEL
-		$SQL = Gdn::SQL();
-		$Px = $SQL->Database->DatabasePrefix;
-		$SQL->Query("delete t.* from {$Px}ThanksLog t 
-			left join {$Px}Comment c on c.CommentID = t.CommentID 
-			where c.commentID is null and t.commentID > 0");
-		$SQL->Query("delete t.* from {$Px}ThanksLog t 
-			left join {$Px}Discussion d on d.DiscussionID = t.DiscussionID 
-			where d.DiscussionID is null and t.DiscussionID > 0");
+		ThanksLogModel::CleanUp();
 		ThanksLogModel::RecalculateUserReceivedThankCount();
 	}
 	
 	
 	
-	public function Structure($Drop = False) {
+	public function Structure() {
 /*		Gdn::Structure()
 			->Table('Comment')
 			->Column('ThankCount', 'usmallint', 0)
@@ -224,7 +216,7 @@ class ThankfulPeoplePlugin extends Gdn_Plugin {
 			->Column('DateInserted', 'datetime')
 			->Column('InsertUserID', 'umediumint', False, 'key')
 			->Engine('MyISAM')
-			->Set(False, $Drop);
+			->Set();
 			
 		ThanksLogModel::RecalculateUserReceivedThankCount();
 		//ThanksLogModel::RecalculateCommentThankCount();
