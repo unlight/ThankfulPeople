@@ -16,8 +16,6 @@ $PluginInfo['ThankfulPeople'] = array(
 	'License' => 'X.Net License'
 );
 
-// TODO: CLEANUP THANKSLOG TABLE
-
 // TODO: PERMISSION THANK FOR CATEGORY
 
 class ThankfulPeoplePlugin extends Gdn_Plugin {
@@ -185,6 +183,21 @@ class ThankfulPeoplePlugin extends Gdn_Plugin {
 		list($Sender->ThankData, $Sender->ThankObjects) = $ThanksLogModel->GetReceivedThanks(array('t.UserID' => $ViewingUserID), 0, 50);
 		$Sender->Render();
 	}
+	
+	public function Tick_Every_720_Hours_Handler($Sender) {
+		// TODO: MOVE TO MODEL
+		$SQL = Gdn::SQL();
+		$Px = $SQL->Database->DatabasePrefix;
+		$SQL->Query("delete t.* from {$Px}ThanksLog t 
+			left join {$Px}Comment c on c.CommentID = t.CommentID 
+			where c.commentID is null and t.commentID > 0");
+		$SQL->Query("delete t.* from {$Px}ThanksLog t 
+			left join {$Px}Discussion d on d.DiscussionID = t.DiscussionID 
+			where d.DiscussionID is null and t.DiscussionID > 0");
+		ThanksLogModel::RecalculateUserReceivedThankCount();
+	}
+	
+	
 	
 	public function Structure($Drop = False) {
 /*		Gdn::Structure()
