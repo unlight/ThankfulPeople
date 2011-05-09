@@ -148,8 +148,8 @@ class ThanksLogModel extends Gdn_Model {
 			if ($Data->CommentID > 0) $ThankData['Comment'][$Data->CommentID][] = $Data;
 			elseif ($Data->DiscussionID > 0) $ThankData['Discussion'][$Data->DiscussionID][] = $Data;
 		}
-		//if (count($ThankData) == 0) return array(array(), array());
 		$this->FireEvent('BeforeRetreiveThankObjects');
+		if (count($ThankData) == 0) return array(array(), array());
 		foreach (array_keys($ThankData) as $Type) {
 			$ObjectIDs = array_keys($ThankData[$Type]);
 			$ObjectPrimaryKey = self::GetPrimaryKeyField($Type);

@@ -4,8 +4,8 @@ $PluginInfo['ThankfulPeople'] = array(
 	'Name' => 'Thankful People',
 	//'Index' => 'ThankfulPeople', // used in Plugin::MakeMetaKey()
 	'Description' => 'Remake of classic Vanilla One extension. Instead of having people post appreciation and thankyou notes they can simply click the thanks link and have their username appear under that post (MySchizoBuddy).',
-	'Version' => '2.0.10',
-	'Date' => '3 May 2011',
+	'Version' => '2.1.11',
+	'Date' => '10 May 2011',
 	'Author' => 'Jerl Liandri',
 	'AuthorUrl' => 'http://www.liandri-mining-corporation.com',
 	'RequiredApplications' => array('Vanilla' => '>=2.0.12'),
@@ -161,11 +161,13 @@ class ThankfulPeoplePlugin extends Gdn_Plugin {
 	}
 	
 	public function ProfileController_AddProfileTabs_Handler($Sender) {
-		$UserReference = ArrayValue(0, $Sender->RequestArgs, '');
-		$Username = ArrayValue(1, $Sender->RequestArgs, '');
 		$ReceivedThankCount = $Sender->User->ReceivedThankCount;
-		$Thanked = T('Profile.Tab.Thanked', T('Thanked')).'<span>'.$ReceivedThankCount.'</span>';
-		$Sender->AddProfileTab($Thanked, 'profile/receivedthanks/'.$UserReference.'/'.$Username, 'Thanked');
+		if ($ReceivedThankCount > 0) {
+			$UserReference = ArrayValue(0, $Sender->RequestArgs, '');
+			$Username = ArrayValue(1, $Sender->RequestArgs, '');
+			$Thanked = T('Profile.Tab.Thanked', T('Thanked')).'<span>'.$ReceivedThankCount.'</span>';
+			$Sender->AddProfileTab($Thanked, 'profile/receivedthanks/'.$UserReference.'/'.$Username, 'Thanked');
+		}
 	}
 	
 	public function ProfileController_ReceivedThanks_Create($Sender) {
