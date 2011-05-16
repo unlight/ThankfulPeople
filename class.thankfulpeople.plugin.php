@@ -4,8 +4,8 @@ $PluginInfo['ThankfulPeople'] = array(
 	'Name' => 'Thankful People',
 	//'Index' => 'ThankfulPeople', // used in Plugin::MakeMetaKey()
 	'Description' => 'Remake of classic Vanilla One extension. Instead of having people post appreciation and thankyou notes they can simply click the thanks link and have their username appear under that post (MySchizoBuddy).',
-	'Version' => '2.1.12',
-	'Date' => '12 May 2011',
+	'Version' => '2.1.13',
+	'Date' => '16 May 2011',
 	'Author' => 'Jerl Liandri',
 	'AuthorUrl' => 'http://www.liandri-mining-corporation.com',
 	'RequiredApplications' => array('Vanilla' => '>=2.0.12'),
@@ -143,7 +143,7 @@ class ThankfulPeoplePlugin extends Gdn_Plugin {
 	public static function ThankedByBox($Collection, $Wrap = True) {
 		$List = implode(' ', array_map('UserAnchor', $Collection));
 		$ThankCount = count($Collection);
-		$ThankCountHtml = Wrap($ThankCount);
+		//$ThankCountHtml = Wrap($ThankCount);
 		$LocalizedPluralText = Plural($ThankCount, 'Thanked by %1$s', 'Thanked by %1$s');
 		$Html = '<span class="ThankedBy">'.$LocalizedPluralText.'</span>'.$List;
 		if ($Wrap) $Html = Wrap($Html, 'div', array('class' => 'ThankedByBox'));
