@@ -191,9 +191,7 @@ class ThankfulPeoplePlugin extends Gdn_Plugin {
 		ThanksLogModel::RecalculateUserReceivedThankCount();
 	}
 	
-	
-	
-	private function _Structure() {
+	public function Structure() {
 /*		Gdn::Structure()
 			->Table('Comment')
 			->Column('ThankCount', 'usmallint', 0)
@@ -226,6 +224,6 @@ class ThankfulPeoplePlugin extends Gdn_Plugin {
 	}
 		
 	public function Setup() {
-		$this->_Structure();
+		$this->Structure();
 	}
 }
