@@ -199,38 +199,4 @@ class ThanksLogModel extends Gdn_Model {
 			where d.DiscussionID is null and t.DiscussionID > 0");
 	}
 	
-	
-/*	public static function RecalculateDiscussionThankCount($DiscussionID = False) {
-		$SQL = Gdn::SQL();
-		$Px = $SQL->Database->DatabasePrefix;
-		$SqlCommentCount = $SQL
-			->Select('*', 'count', 'Count')
-			->From('ThanksLog t')
-			->Where('t.DiscussionID', 'd.DiscussionID', False, False)
-			->GetSelect();
-		$SQL->Reset();
-		if ($DiscussionID !== False) $SQL->Where('d.DiscussionID', $DiscussionID);
-		$SQL
-			->Update('Discussion d')
-			->Set('d.ThankCount', "($SqlCommentCount)", False, False)
-			->Put();
-	}
-	
-	public static function RecalculateCommentThankCount($CommentID = False) {
-		$SQL = Gdn::SQL();
-		$Px = $SQL->Database->DatabasePrefix;
-		$SqlCommentCount = $SQL
-			->Select('*', 'count', 'Count')
-			->From('ThanksLog t')
-			->Where('t.CommentID', 'c.CommentID', False, False)
-			->GetSelect();
-		$SQL->Reset();
-		if ($CommentID !== False) $SQL->Where('c.CommentID', $CommentID);
-		$SQL
-			->Update('Comment c')
-			->Set('c.ThankCount', "($SqlCommentCount)", False, False)
-			->Put();
-	}*/
-	
-	
 }

@@ -4,7 +4,7 @@ $PluginInfo['ThankfulPeople'] = array(
 	'Name' => 'Thankful People',
 	//'Index' => 'ThankfulPeople', // used in Plugin::MakeMetaKey()
 	'Description' => 'Remake of classic Vanilla One extension. Instead of having people post appreciation and thankyou notes they can simply click the thanks link and have their username appear under that post (MySchizoBuddy).',
-	'Version' => '2.2.15',
+	'Version' => '2.2.16',
 	'Date' => 'Summer 2011',
 	'Author' => 'Jerl Liandri',
 	'AuthorUrl' => 'http://www.liandri-mining-corporation.com',
@@ -201,7 +201,6 @@ class ThankfulPeoplePlugin extends Gdn_Plugin {
 			->Table('Discussion')
 			->Column('ThankCount', 'usmallint', 0)
 			->Set();*/
-		
 		Gdn::Structure()
 			->Table('User')
 			//->Column('ThankCount', 'usmallint', 0)
@@ -218,7 +217,11 @@ class ThankfulPeoplePlugin extends Gdn_Plugin {
 			->Engine('MyISAM')
 			->Set();
 			
-		ThanksLogModel::RecalculateUserReceivedThankCount();
+		$RequestArgs = Gdn::Controller()->RequestArgs;
+		if (ArrayHasValue($RequestArgs, 'vanilla')) {
+			ThanksLogModel::RecalculateUserReceivedThankCount();
+		}
+		
 		//ThanksLogModel::RecalculateCommentThankCount();
 		//ThanksLogModel::RecalculateDiscussionThankCount();
 	}
