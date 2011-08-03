@@ -1,0 +1,14 @@
+DESCRIPTION
+===========
+Remake of classic Vanilla One extension. 
+Instead of having people post appreciation and thankyou notes they can simply click the thanks link 
+and have their username appear under that post (MySchizoBuddy).
+
+CONFIGURATION
+=============
+$Configuration['Plugins']['ThankfulPeople']['Only'] = array('Discussion', 'Comment');
+	Allow thank only this type of objects.
+	
+$Configuration['Plugins']['ThankfulPeople']['Disabled'] = array('Comment');
+	Allow disable thank only this type of objects.
+	$Configuration['Plugins']['ThankfulPeople']['Only'] has priority.

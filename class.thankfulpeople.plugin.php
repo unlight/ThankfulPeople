@@ -71,7 +71,7 @@ class ThankfulPeoplePlugin extends Gdn_Plugin {
 		$CommentIDs = ConsolidateArrayValuesByKey($Sender->CommentData->Result(), 'CommentID');
 		$DiscussionCommentThankDataSet = $ThanksLogModel->GetDiscussionComments($DiscussionID, $CommentIDs);
 		
-		
+		// TODO: FireEvent here to allow collect thanks from other objects
 		
 		// Consolidate.
 		foreach ($DiscussionCommentThankDataSet as $ThankData) {
@@ -92,6 +92,17 @@ class ThankfulPeoplePlugin extends Gdn_Plugin {
 		$Sender->AddDefinition('CollapseThankList', T('CollapseThankList'));
 	}
 	
+	public static IsThankable($Type) {
+		
+		static $ThankOnly; if (is_null($ThankOnly)) $ThankOnly = C('Plugins.ThankfulPeople.Only');
+		if (is_array($ThankOnly) && !in_array($Type, $ThankOnly)) return False;
+		
+		static $ThankDisabled; if (is_null($ThankDisabled)) $ThankDisabled = C('Plugins.ThankfulPeople.Disabled');
+		if (is_array($ThankDisabled) && in_array($Type, $ThankDisabled)) return False;
+		
+		return True;
+	}
+	
 	public function DiscussionController_CommentOptions_Handler($Sender) {
 		$EventArguments =& $Sender->EventArguments;
 		$Type = $EventArguments['Type'];
@@ -99,6 +110,9 @@ class ThankfulPeoplePlugin extends Gdn_Plugin {
 		//$Session = Gdn::Session();
 		$SessionUserID = $this->Session->UserID;
 		if ($SessionUserID <= 0 || $Object->InsertUserID == $SessionUserID) return;
+		
+		if (!self::IsThankable($Type)) return;
+		
 		switch ($Type) {
 			case 'Discussion': {
 				$DiscussionID = $ObjectID = $Object->DiscussionID;
