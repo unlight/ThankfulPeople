@@ -6,9 +6,9 @@ and have their username appear under that post (MySchizoBuddy).
 
 CONFIGURATION
 =============
-$Configuration['Plugins']['ThankfulPeople']['Only'] = array('Discussion', 'Comment');
+$Configuration['Plugins']['ThankfulPeople']['Only'] = array('discussion', 'comment');
 	Allow thank only this type of objects.
 	
-$Configuration['Plugins']['ThankfulPeople']['Disabled'] = array('Comment');
+$Configuration['Plugins']['ThankfulPeople']['Disabled'] = array('comment');
 	Allow disable thank only this type of objects.
 	$Configuration['Plugins']['ThankfulPeople']['Only'] has priority.

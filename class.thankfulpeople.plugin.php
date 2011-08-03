@@ -48,6 +48,7 @@ class ThankfulPeoplePlugin extends Gdn_Plugin {
 		$UserID = $ThanksLogModel->GetObjectInserUserID($Type, $ObjectID);
 		if ($UserID == False) throw new Exception('Object has no owner.');
 		if ($UserID == $Session->UserID) throw new Exception('You cannot thank yourself.');
+		if (!self::IsThankable($Type)) throw new Exception("Not thankable ($Type).");
 		
 		// Make sure that user is not trying to say thanks twice.
 		$Count = $ThanksLogModel->GetCount(array($Field => $ObjectID, 'InsertUserID' => $Session->User->UserID));
@@ -92,14 +93,17 @@ class ThankfulPeoplePlugin extends Gdn_Plugin {
 		$Sender->AddDefinition('CollapseThankList', T('CollapseThankList'));
 	}
 	
-	public static IsThankable($Type) {
-		
-		static $ThankOnly; if (is_null($ThankOnly)) $ThankOnly = C('Plugins.ThankfulPeople.Only');
-		if (is_array($ThankOnly) && !in_array($Type, $ThankOnly)) return False;
-		
-		static $ThankDisabled; if (is_null($ThankDisabled)) $ThankDisabled = C('Plugins.ThankfulPeople.Disabled');
-		if (is_array($ThankDisabled) && in_array($Type, $ThankDisabled)) return False;
-		
+	public static function IsThankable($Type) {
+		static $ThankOnly, $ThankDisabled;
+		$Type = strtolower($Type);
+		if (is_null($ThankOnly)) $ThankOnly = C('Plugins.ThankfulPeople.Only');
+		if (is_array($ThankOnly)) {
+			if (!in_array($Type, $ThankOnly)) return False;
+		}
+		if (is_null($ThankDisabled)) $ThankDisabled = C('Plugins.ThankfulPeople.Disabled');
+		if (is_array($ThankDisabled)) {
+			if (in_array($Type, $ThankDisabled)) return False;
+		}
 		return True;
 	}
 	
