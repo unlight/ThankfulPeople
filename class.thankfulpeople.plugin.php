@@ -2,21 +2,19 @@
 
 $PluginInfo['ThankfulPeople'] = array(
 	'Name' => 'Thankful People',
-	//'Index' => 'ThankfulPeople', // used in Plugin::MakeMetaKey()
 	'Description' => 'Remake of classic Vanilla One extension. Instead of having people post appreciation and thankyou notes they can simply click the thanks link and have their username appear under that post (MySchizoBuddy).',
-	'Version' => '2.2.16',
+	'Version' => '1.17.2.0.18',
 	'Date' => 'Summer 2011',
 	'Author' => 'Jerl Liandri',
 	'AuthorUrl' => 'http://www.liandri-mining-corporation.com',
-	'RequiredApplications' => array('Vanilla' => '>=2.0.12'),
+	'RequiredApplications' => array('Vanilla' => '>=2.0.18'),
 	'RequiredTheme' => False, 
 	'RequiredPlugins' => False,
-	//'RegisterPermissions' => array('Plugins.ThankfulPeople.Thank'),
-	//'SettingsPermission' => False,
 	'License' => 'X.Net License'
 );
 
 // TODO: PERMISSION THANK FOR CATEGORY
+// TODO: AttachMessageThankCount
 
 class ThankfulPeoplePlugin extends Gdn_Plugin {
 	
@@ -29,8 +27,7 @@ class ThankfulPeoplePlugin extends Gdn_Plugin {
 		$this->Session = Gdn::Session();
 	}
 	
-	// TODO: _AttachMessageThankCount
-/*   public function DiscussionController_AfterCommentMeta_Handler(&$Sender) {
+/*  public function DiscussionController_AfterCommentMeta_Handler(&$Sender) {
 		$this->AttachMessageThankCount($Sender);
 	}
 	
@@ -50,6 +47,8 @@ class ThankfulPeoplePlugin extends Gdn_Plugin {
 		$Field = $ThanksLogModel->GetPrimaryKeyField($Type);
 		$UserID = $ThanksLogModel->GetObjectInserUserID($Type, $ObjectID);
 		if ($UserID == False) throw new Exception('Object has no owner.');
+		if ($UserID == $Session->UserID) throw new Exception('You cannot thank yourself.');
+		
 		// Make sure that user is not trying to say thanks twice.
 		$Count = $ThanksLogModel->GetCount(array($Field => $ObjectID, 'InsertUserID' => $Session->User->UserID));
 		if ($Count < 1) $ThanksLogModel->PutThank($Type, $ObjectID, $UserID);
@@ -71,6 +70,9 @@ class ThankfulPeoplePlugin extends Gdn_Plugin {
 		// TODO: Permission view thanked
 		$CommentIDs = ConsolidateArrayValuesByKey($Sender->CommentData->Result(), 'CommentID');
 		$DiscussionCommentThankDataSet = $ThanksLogModel->GetDiscussionComments($DiscussionID, $CommentIDs);
+		
+		
+		
 		// Consolidate.
 		foreach ($DiscussionCommentThankDataSet as $ThankData) {
 			$CommentID = $ThankData->CommentID;
@@ -83,9 +85,7 @@ class ThankfulPeoplePlugin extends Gdn_Plugin {
 		}
 		
 		$Sender->AddCssFile('plugins/ThankfulPeople/design/thankfulpeople.css');
-		//$Sender->AddJsFile('jquery.expander.js');
-		// TODO: REMOVE, WAITING FOR VANILLA 2.1.0
-		$Sender->AddJsFile('plugins/ThankfulPeople/js/jquery.expander.js');
+		$Sender->AddJsFile('jquery.expander.js');
 		$Sender->AddJsFile('plugins/ThankfulPeople/js/thankfulpeople.functions.js');
 		
 		$Sender->AddDefinition('ExpandThankList', T('ExpandThankList'));
