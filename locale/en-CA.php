@@ -8,3 +8,4 @@ $Definition['Thanked by %1$s'] = 'Thanked by <span>%1$s</span>';
 $Definition['ThankCommentOption'] = 'Thanks';
 $Definition['ExpandThankList'] = 'Expand';
 $Definition['CollapseThankList'] = 'Collapse';
+$Definition['UnThankCommentOption'] = 'Unthank';

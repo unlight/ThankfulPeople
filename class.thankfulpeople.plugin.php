@@ -37,6 +37,23 @@ class ThankfulPeoplePlugin extends Gdn_Plugin {
 	}
 	*/
 	
+	public function PluginController_UnThankFor_Create($Sender) {
+		$SessionUserID = GetValue('UserID', Gdn::Session());
+		if ($SessionUserID > 0 && C('Plugins.ThankfulPeople.AllowTakeBack', False)) {
+			$ThanksLogModel = new ThanksLogModel();
+			$Type = GetValue(0, $Sender->RequestArgs);
+			$ObjectID = GetValue(1, $Sender->RequestArgs);
+			$ThanksLogModel->RemoveThank($Type, $ObjectID, $SessionUserID);
+			if ($Sender->DeliveryType() == DELIVERY_TYPE_ALL) {
+				$Target = GetIncomingValue('Target', 'discussions');
+				Redirect($Target);
+			}
+			$ThankfulPeopleDataSet = $ThanksLogModel->GetThankfulPeople($Type, $ObjectID);
+			$Sender->SetData('NewThankedByBox', self::ThankedByBox($ThankfulPeopleDataSet->Result(), False));
+			$Sender->Render();
+		}
+	}
+	
 	public function PluginController_ThankFor_Create($Sender) {
 		$Session = $this->Session;
 		if (!$Session->IsValid()) return;
@@ -85,8 +102,8 @@ class ThankfulPeoplePlugin extends Gdn_Plugin {
 			}
 		}
 		
-		$Sender->AddCssFile('plugins/ThankfulPeople/design/thankfulpeople.css');
 		$Sender->AddJsFile('jquery.expander.js');
+		$Sender->AddCssFile('plugins/ThankfulPeople/design/thankfulpeople.css');
 		$Sender->AddJsFile('plugins/ThankfulPeople/js/thankfulpeople.functions.js');
 		
 		$Sender->AddDefinition('ExpandThankList', T('ExpandThankList'));
@@ -117,26 +134,38 @@ class ThankfulPeoplePlugin extends Gdn_Plugin {
 		
 		if (!self::IsThankable($Type)) return;
 		
+		static $AllowTakeBack;
+		if (is_null($AllowTakeBack)) $AllowTakeBack = C('Plugins.ThankfulPeople.AllowTakeBack', False);
+		$AllowThank = True;
+		
 		switch ($Type) {
 			case 'Discussion': {
 				$DiscussionID = $ObjectID = $Object->DiscussionID;
-				if (array_key_exists($SessionUserID, $this->DiscussionData)) return;
+				if (array_key_exists($SessionUserID, $this->DiscussionData)) $AllowThank = False;
 				break;
 			}
 			case 'Comment': {
 				$CommentID = $ObjectID = $Object->CommentID;
-				if (array_key_exists($CommentID, $this->ThankForComment) && in_array($SessionUserID, $this->ThankForComment[$CommentID])) return;
+				if (array_key_exists($CommentID, $this->ThankForComment) && in_array($SessionUserID, $this->ThankForComment[$CommentID])) $AllowThank = False;
 				break;
 			}
 		}
 		
-		static $LocalizedThankButtonText;
-		if ($LocalizedThankButtonText === Null) $LocalizedThankButtonText = T('ThankCommentOption', T('Thanks'));
-		
-		$ThankUrl = 'plugin/thankfor/'.strtolower($Type).'/'.$ObjectID.'?Target='.$Sender->SelfUrl;
-		
-		$Option = '<span class="Thank">'.Anchor($LocalizedThankButtonText, $ThankUrl).'</span>';
-		$Sender->Options .= $Option;
+	
+		if ($AllowThank) {
+			static $LocalizedThankButtonText;
+			if ($LocalizedThankButtonText === Null) $LocalizedThankButtonText = T('ThankCommentOption', T('Thanks'));
+			$ThankUrl = 'plugin/thankfor/'.strtolower($Type).'/'.$ObjectID.'?Target='.$Sender->SelfUrl;
+			$Option = '<span class="Thank">'.Anchor($LocalizedThankButtonText, $ThankUrl).'</span>';
+			$Sender->Options .= $Option;
+		} elseif ($AllowTakeBack) {
+			// Allow unthank
+			static $LocalizedUnThankButtonText;
+			if (is_null($LocalizedUnThankButtonText)) $LocalizedUnThankButtonText = T('UnThankCommentOption', T('Unthank'));
+			$UnThankUrl = 'plugin/unthankfor/'.strtolower($Type).'/'.$ObjectID.'?Target='.$Sender->SelfUrl;
+			$Option = '<span class="UnThank">'.Anchor($LocalizedUnThankButtonText, $UnThankUrl).'</span>';
+			$Sender->Options .= $Option;
+		}
 	}
 	
 	public function DiscussionController_AfterCommentBody_Handler($Sender) {

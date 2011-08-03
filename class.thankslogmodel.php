@@ -75,6 +75,18 @@ class ThanksLogModel extends Gdn_Model {
 		return $UserID; // NOTE: Gdn_DataSet.Value returns NULL, but should False as FirstRow()
 	}
 	
+	public static function RemoveThank($Type, $ObjectID, $SessionUserID) {
+		$Field = self::GetPrimaryKeyField($Type);
+		$UserID = self::GetObjectInserUserID($Type, $ObjectID);
+		$SQL = Gdn::SQL();
+		$SQL
+			->Where($Field, $ObjectID)
+			->Where('InsertUserID', $SessionUserID)
+			->Limit(1)
+			->Delete('ThanksLog');
+		self::UpdateUserReceivedThankCount($UserID, '-1');
+	}
+	
 	public static function PutThank($Type, $ObjectID, $UserID) {
 		$Field = self::GetPrimaryKeyField($Type);
 		$SQL = Gdn::SQL();
@@ -88,10 +100,11 @@ class ThanksLogModel extends Gdn_Model {
 		//call_user_func(array('self', $Function), $ObjectID);
 	}
 	
-	public static function UpdateUserReceivedThankCount($UserID) {
+	public static function UpdateUserReceivedThankCount($UserID, $Value = '+1') {
+		if (!in_array($Value, array('-1', '+1'))) $Value = '+1';
 		Gdn::SQL()
 			->Update('User')
-			->Set('ReceivedThankCount', 'ReceivedThankCount + 1', False)
+			->Set('ReceivedThankCount', 'ReceivedThankCount' . $Value, False)
 			->Where('UserID', $UserID)
 			->Put();
 	}

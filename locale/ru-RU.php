@@ -6,6 +6,7 @@ $Definition['2Thanked by %1$s'] = 'Спасибо сказали <span>%1$s</spa
 $Definition['5Thanked by %1$s'] = 'Спасибо сказали <span>%1$s</span>';
 $Definition['UserInfoModule.Thanked'] = 'Спасибо';
 $Definition['ThankCommentOption'] = 'Спасибо';
+$Definition['UnThankCommentOption'] = 'Забрать спасибо';
 $Definition['Profile.Tab.Thanked'] = 'Благодарности';
 $Definition['ExpandThankList'] = 'все';
 //$Definition['CollapseThankList'] = 'Collapse';

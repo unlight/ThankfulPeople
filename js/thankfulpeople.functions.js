@@ -8,7 +8,7 @@ $(document).ready(function(){
 	});
 	$('div.ThankedByBox span.details > a:last').addClass('Last');
 	
-	$('span.Thank > a').live('click', function(){
+	$('span.Thank > a, span.UnThank > a').live('click', function(){
 		var box, url = this.href, parent = $(this).parent()
 		var item = $(this).parents('ul.MessageList > li'); // TODO: add ul.DataList to collection
 		$(this).after('<span class="TinyProgress">&#160;</span>');
